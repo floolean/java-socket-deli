@@ -3,6 +3,8 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 
+import javax.management.InvalidApplicationException;
+
 public class Socket  {
 
 	private java.net.Socket socket;
@@ -45,6 +47,7 @@ public class Socket  {
                 	
                 	Socket.this.delegate.onConntected();
                     Thread current = Thread.currentThread();
+                    
                     while (current == readThread && istream != null) 
                     {
                     	int bytesRead = istream.read(buffer);
@@ -55,7 +58,13 @@ public class Socket  {
                     	
                     	Socket.this.delegate.onReceiveData(readBuffer);
                     	
-                    	byte[] message = accumulator.accumulate(readBuffer);
+                    	byte[] message = null;
+						try {
+							message = accumulator.accumulate(readBuffer);
+						} catch (InvalidApplicationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
                     	
                     	if (message != null)
                     		Socket.this.delegate.onReceiveMessage(message);

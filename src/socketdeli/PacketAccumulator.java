@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CRC32;
 
+import javax.management.InvalidApplicationException;
+
 public class PacketAccumulator {
 	
 	private static final CRC32 crc = new CRC32();
 	
 	List<Byte> _receiveBuffer = new ArrayList<Byte>();
 
-    public byte[] accumulate(byte[] buffer)
+    public byte[] accumulate(byte[] buffer) throws InvalidApplicationException
     {
 
     	for(int i = 0; i < buffer.length; i++)
@@ -22,7 +24,7 @@ public class PacketAccumulator {
 
             if (header != null) // we got a valid header
             {
-                if (_receiveBuffer.size() >= PacketHeader.HeaderLength + header.getTotalMessageSize()) // check if we got enough data for this packet
+                if (_receiveBuffer.size() >= header.getTotalMessageSize()) // check if we got enough data for this packet
                 {
                 	
                 	int messageStart = PacketHeader.HeaderLength;

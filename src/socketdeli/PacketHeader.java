@@ -1,10 +1,16 @@
 package socketdeli;
 
+import java.security.InvalidParameterException;
 import java.util.zip.CRC32;
+
+import javax.management.InvalidApplicationException;
 
 
 public class PacketHeader {
 
+	
+	public static int MaxPacketSize = 1024 * 1024 * 128; // 128 MB
+	
 	public static final byte[] HeaderBuffer = new byte[] { 0, 1, 1, 2, 3, 5, 8, 13, 21, 34 }; // fibonacci sequence
     public static final int HeaderBufferLength = 10;
     public static final int SizeAndCrcHeaderLength = 12;
@@ -24,7 +30,12 @@ public class PacketHeader {
  // returns the total packet size, including the header
     public int getTotalMessageSize() { return HeaderLength + _packetSize; }
     
-    private PacketHeader(int size, long checksum){
+    private PacketHeader(int size, long checksum)
+    {
+    	
+    	if (size > MaxPacketSize)
+    		throw new InvalidParameterException("The size exceeds MaxPacketSize");
+    	
     	_packetSize = size;
     	_checksum = checksum;
     }
@@ -40,7 +51,7 @@ public class PacketHeader {
 
         for (int i = 0; i < intSize; i++)
         {
-            byte b = (byte) ((_packetSize >> 8*i) & 0x000000FF);
+            byte b = (byte) ((_packetSize >> 8 * i) & 0x000000FF);
             buffer[HeaderBufferLength - 1 + 6 - i] = b;
         }
 
@@ -55,7 +66,7 @@ public class PacketHeader {
     }
 
     // tries to get a valid header from a byte array
-    public static PacketHeader fromBuffer(byte[] buffer)
+    public static PacketHeader fromBuffer(byte[] buffer) throws InvalidApplicationException
     {
 
         if (buffer.length < HeaderLength)
@@ -82,12 +93,15 @@ public class PacketHeader {
             long value = (long)(b << 8 * (5 - i));
             checksum |= value;
         }
+        
+        if (size > MaxPacketSize)
+    		throw new InvalidApplicationException("The size from the header buffer exceeds MaxPacketSize");
 
         return new PacketHeader(size, checksum);
 
     }
 
-    // Creates a valid header for a given byte array of data
+    // Creates a valid header for a given byte array
     public static PacketHeader create(byte[] buffer)
     {
     	
